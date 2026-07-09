@@ -1,5 +1,5 @@
 ---
-title: "| RESEARCH PROTOCOL\n| \n| Study Repo Template \n"
+title: "| RESEARCH PROTOCOL\n| \n| Characterization of OHDSI Regional/National Databases: Understanding Diagnostic Failures in OHDSI Global Network Studies\n"
 fontsize: 12pt
 geometry: margin=1in
 output:
@@ -49,15 +49,14 @@ longtable: yes
 mainfont: Arial
 bibliography: Protocol.bib
 params:
-  date: '28-Mar-2023'
-  version: 0.0.1
+  date: '20-Jun-2026'
+  version: 0.4
 subtitle: 'Version: `r params$version`'
 link-citations: yes
 csl: bmj.csl
 ---
 
 ```{r setup, include=FALSE}
-library(LegendT2dm)
 knitr::opts_chunk$set(echo = TRUE, warning=FALSE)
 options(kableExtra.latex.load_packages = FALSE)
 library(kableExtra)
@@ -76,11 +75,50 @@ options(knitr.table.format = function() {
 latex_table_font_size <- 8
 ```
 
+# Version Control
+
+```{r versioncontrol, echo=FALSE}
+versionControl <- readr::read_delim(col_names = TRUE, delim = ";", trim_ws = TRUE, file = "
+  Version; Date; Changes
+  0.0.1; 4 May 2026; Set up basic protocol document
+  0.1; 18 May 2026; Added full section content using OHDSI community protocol format
+  0.2; 22 May 2026; Stream 2 revised to backend R package. Diagnostic criteria expanded with pass/fail definitions
+  0.3; 25 May 2026; Specificity improvements throughout. Negative control extraction schema added. Analysis pipeline operationalised
+  0.4; 20 Jun 2026; Updated data analytics methods for more detail
+")
+
+tab <- kable(versionControl, booktabs = TRUE, linesep = "") %>%
+  column_spec(1, width = "6em") %>%
+  column_spec(2, width = "8em") %>%
+  column_spec(3, width = "30em")
+
+if (knitr::is_latex_output()) {
+  tab %>% kable_styling(latex_options = c("striped", "hold_position"), 
+                        font_size = latex_table_font_size)
+} else {
+  tab %>% kable_styling(bootstrap_options = "striped")
+}
+```
+
 # List of Abbreviations
 
 ```{r abbreviations, echo=FALSE}
 abbreviations <- readr::read_delim(col_names = FALSE, delim = ";", trim_ws = TRUE, file = "
-  CDM; Common data model
+  APAC; Asia-Pacific
+  ASMD; Absolute Standardised Mean Difference
+  CDM; Common Data Model
+  CI; Confidence Interval
+  EASE; Expected Absolute Systematic Error
+  EHR; Electronic Health Record
+  HR; Hazard Ratio
+  IRB; Institutional Review Board
+  N. Am; North American
+  OHDSI; Observational Health Data Sciences and Informatics
+  OMOP; Observational Medical Outcomes Partnership
+  PLP; Patient-Level Prediction
+  PS; Propensity Score
+  RWE; Real-World Evidence
+  SCCS; Self-Controlled Case Series
 ")
 
 tab <- kable(abbreviations, col.names = NULL, linesep = "", booktabs = TRUE)
@@ -102,13 +140,14 @@ if (knitr::is_latex_output()) {
 ```{r parties, echo=FALSE}
 parties <- readr::read_delim(col_names = TRUE, delim = ";", trim_ws = TRUE, file = "
   Investigator; Institution/Affiliation
-  Joe Bruin *; Department of Biostatistics, University of California, Los Angeles, Los Angeles, CA, USA
+  Evelyn Goh *; National University of Singapore, Saw Swee Hock School of Public Health (e0983111@u.nus.edu)
+  Jack Janetzki; University of South Australia (jack.janetzki@unisa.edu.au)
 ")
 
 tab <- kable(parties, booktabs = TRUE, linesep = "") %>%
   column_spec(1, width = "10em") %>%
   column_spec(2, width = "35em") %>%
-  footnote(general = "* Principal Investigator", general_title = "")
+  footnote(general = "* Corresponding Investigator", general_title = "")
 
 if (knitr::is_latex_output()) {
   tab %>% kable_styling(latex_options = c("striped", "hold_position"),
@@ -121,91 +160,312 @@ if (knitr::is_latex_output()) {
 ## Disclosures
 
 This study is undertaken within Observational Health Data Sciences and Informatics (OHDSI), an open collaboration.
-**JB** is a fictional character.
 
 \clearpage
 
 # Abstract
 
-**Background and Significance**: 
+**Background and Significance**: OHDSI network studies rely on a standardised diagnostic framework — covariate balance (ASMD), empirical equipoise, and empirical calibration (EASE) — to determine which databases contribute valid estimates to combined evidence synthesis. This framework was established, defined, and validated primarily using North American databases, and its generalisability to structurally different non-North American databases has not been systematically evaluated. A recent OHDSI APAC study on GLP-1 receptor agonists and acute liver injury found that APAC, ANZ, and EU databases failed diagnostic criteria at substantially higher rates than North American databases, with North American sources ultimately contributing over 99% of weighted evidence despite the study's APAC origin and focus. Preliminary covariate coverage analysis identified regional clustering patterns consistent with structural rather than random missingness. Whether these failures reflect genuinely unreliable estimates or a diagnostic framework poorly calibrated to non-North American database structures remains an open and consequential question for regional representation in global evidence generation.
 
-**Study Aims**: 
+**Study Aims**: This study aims to systematically characterise how database structural differences — particularly covariate domain sparsity — relate to OHDSI diagnostic performance across a broad sample of multi-database network studies, and to determine whether regional diagnostic failure patterns are consistent across studies, drug classes, and outcomes, or reflect genuine analytical bias.
 
 **Study Description**: 
 
-* **Population**: 
+* **Population**: Existing OHDSI multi-database network studies meeting inclusion criteria (comparative cohort design with large-scale propensity score estimation, ≥2 non-North American and ≥1 North American database, available database-level diagnostic and covariate outputs), supplemented by data collected directly from OHDSI network sites via a purpose-built R package.
 
-* **Comparators**:
+* **Comparators**: North American databases versus non-North American (APAC, European, Australasian, other regional) databases, compared on diagnostic pass/fail outcomes, covariate domain coverage, and empirical null distribution characteristics.
   
-* **Outcomes**:
+* **Outcomes**: Diagnostic pass/fail classification under ASMD, equipoise, and EASE criteria; covariate domain-level missingness patterns; empirical null distribution parameters (mu, sigma); and a resulting database-level structural characterisation taxonomy.
   
-* **Design**: 
+* **Design**: Methodological meta-study analysing aggregate (not patient-level) diagnostic and covariate outputs from prior OHDSI network studies, combined with standardised prospective data collection across participating OHDSI sites, using clustering analysis, logistic regression, and non-parametric group comparisons to relate database structure to diagnostic outcomes.
 
-* **Timeframe**: 
+* **Timeframe**: 1-2 years, TBC
 
 \clearpage
 
-# Amendments and Updates
-
-```{r amendments, echo=FALSE}
-amendments <- readr::read_delim(col_names = TRUE, delim = ";", trim_ws = TRUE, file = "
-  Number; Date; Section of study protocol; Amendment or update; Reason
-")
-
-tab <- kable(amendments, booktabs = TRUE, linesep = "")
-
-if (knitr::is_latex_output()) {
-  tab %>% kable_styling(latex_options = c("striped", "hold_position"), font_size = latex_table_font_size)
-} else {
-  tab %>% kable_styling(bootstrap_options = "striped")
-}
-```
-
-# Milestones
-
-```{r dates, echo=FALSE}
-dates <- readr::read_delim(col_names = TRUE, delim = ";", trim_ws = TRUE, file = "
-  Milestone; Planned / actual date
-")
-
-tab <- kable(dates, booktabs = TRUE, linesep = "")
-
-if (knitr::is_latex_output()) {
-  tab %>% kable_styling(latex_options = c("striped", "hold_position"), font_size = latex_table_font_size)
-} else {
-  tab %>% kable_styling(bootstrap_options = "striped")
-}
-```
-
 # Rationale and Background
 
+The OHDSI collaborative defines and applies a common analytical framework across distributed databases while retaining patient-level data via a federated global studies execution method. The key premise of this protocol is that a single standardised framework can produce comparable and combinable estimates across databases. This assumption only holds to the extent that databases in network studies are structurally and analytically similar.
+
+Healthcare databases differ in fundamental ways that can compromise this assumption; these differences reflect the structure of the underlying healthcare system, the incentives that drive behaviour, and regulatory/administrative context in which the data is generated. As such, fundamental differences exist: covariates that are faithfully recorded in North American databases may be systematically absent in other non-N. Am databases.
+
+OHDSI has invested substantially in developing a transparent diagnostic framework to assess whether cohorts generated by individual databases are able to produce reliable causal estimates before admission to combined evidence synthesis. The OHDSI Strategus framework calls several packages as part of a predefined pipeline to assess databases on a variety of aspects:
+
+* FeatureExtraction pulls the covariate matrix of each database in specific time windows and feeds this into the propensity score model.
+
+* Subsequently, propensity scores are estimated using regularised logistic regression via Cyclops. The fitted scores produce the preference score distributions and equipoise assessments.
+
+* ASMD is calculated by comparing covariate means between treatment and comparator groups before and after PS adjustment.
+
+* Finally, EmpiricalCalibration fits an empirical null distribution with the negative control outcome estimates produced by CohortMethod to produce the EASE metric.
+
+While these diagnostics offer a significant methods advantage by providing quantitative criteria for excluding estimates that are likely to be biased, the statistical methods were primarily established, defined, and validated using North American databases and standards. The assumption that these thresholds generalise to non-North American databases with different structural characteristics has yet to be evaluated.
+
+The recent OHDSI APAC study assessing association between use of GLP-1s and acute liver injury across 15 international databases identified a striking pattern of regional asymmetry in diagnostic performance. Databases located in APAC, ANZ, and EU regions failed OHDSI diagnostic criteria at substantially higher rates than North American databases. Following diagnostic filtering, N. Am databases contributed over 99% of the weighted data entering evidence synthesis, despite the study having been initiated by Singapore and attempting to assess its impact on Asian populations.
+
+A brief analysis of covariate coverage data identified patterns of regional missingness. Five distinct clusters of covariate availability were identified, broadly corresponding to regional groups, with APAC databases characterised by substantially lower availability of certain covariate domains relative to North American counterparts. Partial replication of this pattern was observed in another study regarding associations between fluoroquinolone and abdominal aortic aneurysms. These observations give rise to the central question motivating this study: do non-N. American databases fail OHDSI diagnostic criteria because their estimates are genuinely unreliable, or because the structural characteristics of those databases interact poorly with a diagnostic framework that was calibrated in a North American context?
+
+No systematic study has examined the relationship between database structural characteristics and OHDSI diagnostic performance across multiple studies, drug classes, and regions. The present study is designed to fill this gap by assembling and analysing diagnostic performance data, covariate structure data, and negative control data from a broad sample of OHDSI multi-database network studies and developing a robust characterisation of how structural database differences correlate with diagnostic outcomes. This study will provide the empirical foundation necessary to evaluate whether and how the OHDSI diagnostic framework requires adaptation for use with regional (specifically APAC) databases.
+
 # Study Objectives
+
+The objective of this study is to systematically characterise how database structural differences manifest in diagnostic performance across OHDSI network studies between North American and non-North American databases across a sample of multi-database OHDSI network studies, and to determine whether these differences are consistent across studies, targets, and outcomes.
+
+Specifically:
+
+* To identify which diagnostic criteria (covariate balance (ASMD), empirical equipoise, or empirical calibration (EASE)) are most strongly associated with database regional origin, and to characterise the domain-specificity of covariate missingness patterns driving these failures.
+
+* To quantify covariate missingness in non-North American databases and compare patterns across regions and OMOP domains, determining whether missingness is generalised or concentrated in specific data domains (condition history, drug exposure, procedures, measurements, visits).
+
+* To evaluate negative control estimate distributions across databases and assess whether databases that fail primary OHDSI diagnostics produce empirical null distributions consistent with passing databases, providing an empirical basis for distinguishing structural data differences from genuine analytical bias.
+
+* To assess the consistency of diagnostic failure patterns across studies with different drug classes, therapeutic areas, and outcome definitions, testing whether the patterns observed in the GLP-1/liver injury study replicate across the broader network study sample.
+
+* To produce a database-level characterisation taxonomy (a typology of structural database profiles with associated expected diagnostic behaviour) for use as a pre-study planning tool by investigators designing future OHDSI network studies involving APAC databases.
 
 # Research Methods
 
 ## Study Design
 
-This study uses `CohortMethod` [@Schuemie2020-fa].
+This is a methodological meta-study that does not involve patient-level data and does not generate new clinical estimates. It analyses the aggregate diagnostic and covariate outputs produced by previously conducted OHDSI network studies, using `CohortMethod` [@Schuemie2020-fa] and related HADES tooling as the analytical framework of the source studies.
 
 ## Data Sources
 
+The study comprises two complementary data collection streams.
+
+The first draws on existing publicly available results from OHDSI network studies whose outputs are accessible via the OHDSI results explorers or equivalent ShinyApp interfaces. Studies are identified through systematic search of the OHDSI GitHub repository, the OHDSI publications list, preprint servers (medRxiv, Research Square), and direct outreach to the OHDSI APAC community and relevant workgroups. A PRISMA-style log is maintained recording studies identified, assessed for eligibility, and included or excluded with reasons.
+
+Stream 2 deploys a purpose-built R package across OHDSI network sites to collect standardised data from databases not represented in Stream 1, or for which Stream 1 data are insufficient. The package operates as a fully self-contained backend pipeline requiring no ShinyApp interface or interactive results viewer. Participating sites execute the package locally via a single function call.
+
+The package executes the following steps in sequence:
+
+1. Cohort instantiation against the site's OMOP CDM using CohortGenerator
+
+2. Large-scale covariate extraction using FeatureExtraction with a pre-specified covariate set covering all OMOP domains and time windows consistent with those used in Stream 1 source studies
+
+3. Propensity score estimation using CohortMethod with Cyclops regularised logistic regression
+
+4. Computation of covariate balance (ASMD before and after PS adjustment), preference score distributions, and equipoise metrics; and execution of outcome models for a pre-specified set of negative control outcomes drawn from the OHDSI validated negative control set. EmpiricalCalibration is called to fit the empirical null distribution and compute EASE.
+
+The package produces a standardised set of CSV output files (one per output type: covariate balance, preference scores, negative control estimates, empirical null parameters) with a schema identical to the data extracted under Stream 1 to ensure both streams feed the same downstream analytical pipeline without transformation. No patient-level records are included in any output file; all outputs contain only aggregate statistics. The minimum cell count is set at 5 persons. Cells below this threshold are censored prior to export in accordance with standard OHDSI practice.
+
+All package code is version-controlled and will be made publicly available on the OHDSI GitHub repository under the Apache 2.0 licence prior to deployment. Package execution is implemented within the Strategus framework to ensure compatibility with existing site infrastructure. Internal validation of the package will be conducted prior to external deployment in an environment to be confirmed.
+
+Benchmark cohorts used in Stream 2 are selected from drug classes with documented multi-regional prescribing to maximise patient eligibility across both North American and APAC databases. Cohort definitions are pre-specified in ATLAS and included as JSON in the study package. Negative controls are drawn from the OHDSI validated set, filtered to outcomes with expected incidence sufficient to generate computable estimates across the target databases.
+
+Participating studies are recruited through the OHDSI APAC network, with a target minimum of 10 APAC databases and 5 non-APAC databases for the Stream 2 component.
+
 ## Study Population
 
-## Exposure Comparators
+The 'population' for this study is represented by existing OHDSI network studies.
 
-## Outcomes {#outcomes}
+**Inclusion criteria for studies to be included**
 
-## Analysis
+* Multi-database comparative cohort study using CohortMethod or an equivalent OHDSI comparative cohort framework with large-scale propensity score estimation.
+
+* Minimum of two non-North American databases and one North American database among participating sources.
+
+* Availability of database-level diagnostic outputs including ASMD before and after propensity score adjustment, propensity score or preference score distribution data, and negative control outcome estimates at the database level.
+
+* Use of large-scale covariate extraction via FeatureExtraction, such that a covariate domain-level coverage profile can be reconstructed or obtained for each participating database.
+
+* Study protocol and results available for review via OHDSI GitHub, a published or preprinted manuscript, or direct investigator data sharing.
+
+**Exclusion criteria**
+
+* Studies using patient-level prediction (PLP), self-controlled case series (SCCS), or treatment pattern characterisation designs, as these do not generate the propensity score and ASMD diagnostics required for analysis.
+
+* Studies for which diagnostic outputs are available only in aggregated or summarised form that does not permit reconstruction of database-level covariate domain coverage profiles.
+
+* Studies conducted entirely within a single database or a single healthcare system.
+
+## Data Collection
+
+For each included study, the following data will be extracted at the database level from available interfaces, published supplementary materials, or direct data sharing arrangements with study investigators. A study package will also be developed/deployed along participating OHDSI network sites to collect standardised diagnostic/covariate/negative control structure data.
+
+### Study-level metadata
+
+* Study identifier, title, and protocol version
+
+* Target cohort(s), comparator cohort(s), and outcome(s) of interest with ATLAS cohort definition IDs where available
+
+* Drug class(es) and therapeutic area(s)
+
+* Study design and analytical framework (CohortMethod version, Strategus version)
+
+* Propensity score method (large-scale regularised logistic regression via Cyclops; covariate specification including time windows and domain coverage)
+
+* Negative control set identifier and number of negative controls specified
+
+* Diagnostic thresholds applied (ASMD threshold, equipoise threshold, EASE threshold)
+
+### Database-level metadata
+
+* Database identifier and name
+
+* Database type: electronic health record, administrative claims, disease registry, or linked
+
+* Geographic region (North America, Europe, APAC, Australasia, other) and country
+
+* Approximate size: number of unique patients, number of observation-years, and data coverage period
+
+* Data source level: national, regional, or institutional
+
+### Covariate structure data
+
+* Post-adjustment ASMD for all covariates: full distribution and proportion exceeding ASMD 0.1
+
+* Preference score distribution: mean and SD for target and comparator groups; proportion of patients with preference score between 0.3 and 0.7 (equipoise zone); equipoise pass/fail classification
+
+* Diagnostic pass/fail outcome under study-specified thresholds for each criterion separately
+
+* Contribution weight to meta-analytic evidence synthesis, if available
+
+### Negative control data
+
+Negative control data are extracted at two levels: per-negative-control estimate level and aggregate empirical null distribution level.
+
+**Per negative control outcome (one row per negative control per database)**
+
+* Outcome concept ID and name
+
+* Number of outcome events in target cohort and comparator cohort
+
+* Person-time at risk in target and comparator cohorts (years)
+
+* Whether estimate was computable (binary): zero-event outcomes recorded explicitly as non-computable rather than omitted
+
+* Uncalibrated log hazard ratio (or log risk ratio) and standard error
+
+* Uncalibrated point estimate and 95% confidence interval on the hazard ratio scale
+
+* Calibrated point estimate and 95% confidence interval after empirical calibration
+
+* ASMD maximum for this negative control's propensity score model, where available
+
+**Aggregate empirical null distribution (one row per database per study)**
+
+* Number of negative controls with computable estimates contributing to the null fit
+
+* Number of negative controls excluded due to zero events or non-convergence
+
+* Empirical null distribution mean (mu): systematic bias on the log scale
+
+* Empirical null distribution standard deviation (sigma): unexplained heterogeneity
+
+* EASE value and pass/fail classification against the study-specified threshold
+
+* 95% confidence interval on mu and sigma from the EmpiricalCalibration fit
+
+* Proportion of negative control estimates whose uncalibrated 95% CI excludes the null (expected approximately 5% under correct calibration)
+
+## Data Analysis
+
+### Covariate availability
+
+Within a study cohort for a database, compute the proportion of covariates with null values (completely absent), the distribution of subject availability for covariates, as well as the stratification of covariate availability by OHDSI concept domain (condition era, drug era, measurement, observation, procedure, demographics). Proportions will be compared across regional groups using non-parametric tests appropriate for the distributional properties of the data (to be confirmed based on further analyses). Intra-region and inter-regional variance will be quantified to assess whether regions are internally heterogenous or consistently distinct from North America/U.S. databases.
+
+### Cluster analysis
+
+To identify individual database sparsity patterns, a similar method of *k*-means clustering will be used based on the covariate availability analysis above. Each covariate row will be reduced to a dimensional vector (one dimension per database) and ratios will be calculated to correspond to the proportion of subject availability per covariate for that database:
+
+* Proportion of covariates with 'null' subjects (i.e. falls under study threshold)
+
+* Proportion of covariates with subjects n ≤ 100,000
+
+* Proportion of covariates with subjects 100,000 < n ≤ 500,000
+
+* Proportion of covariates with subjects n > 500,000
+
+*k*-means clustering will be applied to each available cohort to identify patterns, with each cluster then labelled by dominant covariate category using regex prefix matching.
+
+For regional database sparsity patterns, the same method will be applied; however, dimensional vectors will be defined as one dimension per region instead.
+
+For comparison and statistical rigour, hierarchical clustering with Ward's linkage will also be applied to covariate-by-database matrices of each proportion threshold category (1-4 as above), first separately for each cohort and subsequently jointly across cohorts. Cluster stability will be assessed using bootstrap resampling (Jaccard similarity across 1,000 bootstrap samples, threshold > 0.75 for stable clusters). The optimal cluster number will be determined using gap statistic and silhouette coefficient. Cluster membership will be examined for correspondence with geography, region, database type, and healthcare system characteristics in both quantitative and qualitative methods.
+
+As clusters are defined by OHDSI needs, a secondary semi-manual analysis of clusters will occur. Cluster membership will be re-annotated clinically: for each cluster, the top ten most prevalent covariate concepts will be extracted and reviewed by domain. This will assist with distinguishing between structural data differences from genuine data quality issues.
+
+### Analysis of diagnostic performance
+
+The relative contribution of each diagnostic criterion (ASMD, PS overlap, EASE) to overall failure will be examined, with particular attention to whether APAC/regional databases fail consistently on ASMD and PS overlap but not EASE.
+
+For each database-study pair (with at least 20 computable negative control estimates), the empirical null distribution is characterised by its fitted mu (systematic bias) and sigma (heterogeneity). The primary comparison is between four groups defined by diagnostic outcome:
+
+* (A) passes all three criteria
+
+* (B) fails ASMD or equipoise only, passes EASE
+
+* (C) fails EASE only
+
+* (D) fails ASMD or equipoise and EASE
+
+As EASE directly measures if estimates are actually biased, we consider EASE to be the natural ground truth of database validity.
+
+1. Of the databases that fail ASMD or equipoise, what proportion also fail EASE? If regional databases have high false-positive rates (fails ASMD/equipoise but passes EASE), it may suggest that ASMD criteria may be too harsh for regional database characteristics. Sensitivity, specificity, PPV, and NPV of ASMD/equipoise failure will be computed for predicting EASE failure, stratified by region.
+
+2. While ASMD thresholds can be adjusted, the standard threshold of 0.1 was chosen empirically. We analyse if this threshold produces significant false-positive rates across database types by examining the distribution of ASMD values in databases where EASE passes. If U.S./North American databases that pass EASE cluster well below 0.1 but regional databases that also pass EASE cluster elsewhere, this may indicate the need for adjusted thresholds based on region.
+
+3. A similar analysis as (2) can be done for preference scores or PS overlap metrics.
+
+4. For ASMD specifically, the relationship between ASMD and covariate prevalence can be further examined to assess the factors causing failure. If the databases with ASMD failure are associated with low covariate prevalence, it may once again indicate the need for covariate adaptation.
+
+APAC/regional and North American databases are examined separately within these groups. Between-group differences in mu and sigma are tested using Kruskal-Wallis tests with post-hoc Dunn tests; the proportion of databases in group B (fails primary diagnostics but passes EASE) is reported by region with exact binomial confidence intervals.
+
+### Covariate balance and diagnostic failure
+
+Logistic regression will be used to analyse the association between covariate structure and diagnostic failure outcomes. Variables to be assessed will include: overall coverage, domain-specific coverage rate, relative coverage ratio (between DBs), cohort size, and study-level characteristics. Mixed-effects models will be used to account for the clustering of observations within databases and within studies. The binary outcome for each model is diagnostic pass (0) or fail (1) for the respective criterion. Discrimination and calibration of models will be assessed.
+
+Given the hypothesis that ASMD failures in sparse databases reflect numerical instability rather than genuine confounding, a supplementary analysis examines ASMD failure specifically in low-prevalence covariates. For each database-study pair, the proportion of ASMD failures attributable to covariates with prevalence below 1% in both groups is computed and compared between North American and APAC databases using a Wilcoxon rank-sum test.
+
+### Negative controls and diagnostic failure
+
+For each database, the scatter of negative control log HR estimates against their expected values under the null is plotted and visually assessed. The proportion of negative controls with uncalibrated 95% CIs excluding the null (expected approximately 5%) is computed per database and compared between APAC and North American databases. Systematic shifts in particular outcome domains (e.g., cardiovascular, hepatic, metabolic) are assessed by examining domain-stratified mean log HRs across databases.
+
+The validity of the negative control set across regions is partially evaluated by examining whether any negative control outcomes show non-null effects consistently across APAC databases but not North American databases, which would suggest region-specific non-null relationships. Negative controls showing such a pattern are flagged and their contribution to the EASE calculation is assessed in a sensitivity analysis.
+
+### Inter-study analysis
+
+Covariates included in the PS model and their clinical relevance depend heavily on what treatment and outcome are being studied. As such, the ASMD values (dependent on covariate balance) cannot be directly compared across studies as they are not measuring the same covariates. Several approaches are possible for inter-study analysis:
+
+* Compare studies across a single database: relative failure rate is calculated for each database by dividing a database's ASMD failure rate by the mean failure rate of North American/U.S. databases in the same study, which provides an odds ratio of the likelihood of that database's failure compared to the average North American/U.S. database. These ratios can subsequently be pooled across studies via a random-effects meta-analytic framework.
+
+* Compare studies across domain coverage: calculate the proportion of specific domain covariates with non-zero prevalence or specific subject distributions and compare across studies. We assume here that covariate prevalence can consistently predict diagnostic failure across studies. A cross-study regression will be conducted to assess the association between domain coverage ratio and study-standardised failure rate. If this relationship is consistent across study classes and outcomes, it may serve as an indicator of structural problems.
+
+* Unlike covariate balance, EASE uses the same set of negative controls across studies, although the list has expanded with time. The empirical null distribution reflects the systematic error of the database irrelevant to the clinical question. EASE distributions will be compared across studies to assess genuine clinical invalidity. ASMD/equipoise measures/findings will be compared against EASE findings.
+
+* Cross-study generalisability will be assessed by comparing cluster assignments and null proportion patterns between studies. Concordance will be measured using the adjusted Rand index for cluster membership and the Spearman rank correlation for null proportions by domain.
 
 # Sample Size and Study Power {#sample-size}
 
 # Strengths and Limitations {#strengths-limitations}
 
+**Strengths:**
+
+* Empirical motivation that needs to be further validated or invalidated as a hypothesis
+
+* Multi-study design to distribute the influence of unique clinical/regional/study-specifics and assess why databases are failing consistently
+
+* Use of diagnostics as a method to distinguish structural data differences from genuine bias
+
+**Limitations:**
+
+* Negative control validity may not be uniform across regions
+
+* Data availability is heterogeneous and uncontrolled
+
+* Source studies may have selection bias
+
+* Small number of regional/non-N.Am databases compared to N.Am databases
+
 # Protection of Human Subjects
+
+Participating institutions should seek IRB approval for this study as necessary.
 
 # Management and Reporting of Adverse Events and Adverse Reactions
 
 # Plans for Disseminating and Communicating Study Results
+
+Results will be shared/discussed during the OHDSI APAC Symposium if sufficient data has been gathered. This work will be presented at conferences and published as a manuscript.
 
 \clearpage
 
@@ -220,14 +480,6 @@ This study uses `CohortMethod` [@Schuemie2020-fa].
 # (APPENDIX) Appendix {-}
 
 # Exposure Cohort Definitions
-
-```{r appendix,  echo=FALSE, results="asis", warning=FALSE, message=FALSE}
-source("https://raw.githubusercontent.com/ohdsi-studies/LegendT2dm/master/R/PrettyOutput.R")
-
-printCohortDefinitionFromNameAndJson(name = "Template Cohort (New-users of DDP4 inhibitors)",
-                                     json = SqlRender::readSql("templateCohort.json"),
-                                     withConcepts = TRUE)
-```
 
 # Outcome Cohort Definitions
 
